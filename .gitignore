@@ -12,8 +12,9 @@ node_modules/
 out/
 frontend/.env*
 
-# Eval output (kept locally; sample results are committed explicitly)
-eval/results/*.json
+# Eval output — ad-hoc runs are local only; baseline_offline_provider.json is
+# committed on purpose as a reference result (see docs/EVALUATION.md).
+eval/results/run_*.json
 
 # OS
 .DS_Store
