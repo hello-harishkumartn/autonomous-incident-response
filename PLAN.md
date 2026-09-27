@@ -116,6 +116,16 @@ Postgres/SQLite  ←──────────────┐
 - **Everything the agent does is persisted**, not just logged — the DB rows
   for an incident run ARE the state machine's memory, so a run can be
   inspected or resumed from any point.
+- **Metrics/traces borrow the concepts, not the wire protocol.** `MetricPoint`
+  rows are Prometheus-shaped (service label + metric name + timestamp +
+  value) and `TraceSpan` rows follow OTel's span model (trace/span/parent
+  IDs, service, operation, start/duration, status) — enough for the
+  `query_metrics`/`get_trace` tools to be realistic and for a reader
+  familiar with either system to recognize the shape immediately. Neither
+  exposes an actual `/metrics` text-exposition endpoint or OTLP wire
+  format; the spec asked for this "if practical," and building a real
+  Prometheus scrape target added no value the agent loop could use that
+  the DB-backed tool couldn't already provide.
 
 ## Definition of done
 

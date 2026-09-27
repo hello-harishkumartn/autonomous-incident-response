@@ -10,7 +10,9 @@ __pycache__/
 node_modules/
 .next/
 out/
-frontend/.env*
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
 
 # Eval output — ad-hoc runs are local only; baseline_offline_provider.json is
 # committed on purpose as a reference result (see docs/EVALUATION.md).
