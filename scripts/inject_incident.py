@@ -45,7 +45,9 @@ def main() -> None:
     if args.investigate:
         from run_agent import investigate
 
-        investigate(incident_id, approve_all=args.approve_all)
+        result = investigate(incident_id, approve_all=args.approve_all)
+        resolved = result is not None and result.value == "incident_resolved"
+        sys.exit(0 if resolved else 1)
     else:
         print(f"\nTo investigate: python scripts/run_agent.py --incident-id {incident_id}")
 
