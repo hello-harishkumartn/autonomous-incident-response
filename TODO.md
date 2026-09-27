@@ -99,8 +99,8 @@ Legend: [ ] pending, [x] done, [~] partial/in progress
 ## 14. Final pass
 - [x] full pytest run green (19 tests)
 - [x] eval run stored
-- [x] demo.sh run verified
-- [ ] final commit + review
+- [x] demo.sh run verified (bad_deployment, dependency_timeout, redis_failure all confirmed working)
+- [x] final commit + review — repo clean, 8 commits, no stray db/build files tracked
 
 ## Known gaps (deprioritized, honest accounting)
 - No dedicated simulator-determinism unit test (same seed -> same telemetry) —
