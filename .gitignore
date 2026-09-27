@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.db
+.pytest_cache/
+.env
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+frontend/.env*
+
+# Eval output (kept locally; sample results are committed explicitly)
+eval/results/*.json
+
+# OS
+.DS_Store
+Thumbs.db
