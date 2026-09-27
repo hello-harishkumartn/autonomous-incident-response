@@ -127,9 +127,17 @@ class AgentLoop:
         self.session.flush()
 
     # --------------------------------------------------------------- run
-    def run_to_completion(self) -> StoppingReason | None:
+    def run_to_completion(self, step_delay: float = 0.0) -> StoppingReason | None:
+        """Runs until a terminal StoppingReason or an approval pause (returns None).
+
+        Commits after every iteration (not just at the end) so a concurrent
+        reader — the API's polling GET endpoints, in particular — sees the
+        investigation progress in real time. `step_delay` is purely a UX
+        knob for the UI demo ("watch it evolve"); CLI/tests leave it at 0.
+        """
         if self.incident.phase == IncidentPhase.ALERTED.value and not self._cache.tool_calls:
             self._log_event(IncidentPhase.ALERTED, "decision", f"Alert received: {self.incident.alert_summary}")
+            self.session.commit()
 
         last_verification_failed = False
         while True:
@@ -137,10 +145,15 @@ class AgentLoop:
             if budget_hit:
                 self._log_event(IncidentPhase.BUDGET_EXHAUSTED, "result", "Iteration/time/token budget exhausted.")
                 self._resolve(IncidentPhase.BUDGET_EXHAUSTED, budget_hit)
+                self.session.commit()
                 return budget_hit
 
             result = self.step(last_verification_failed)
+            self.session.commit()
             last_verification_failed = False
+
+            if step_delay:
+                time.sleep(step_delay)
 
             if result == VERIFY_FAILED:
                 last_verification_failed = True
@@ -151,7 +164,7 @@ class AgentLoop:
                 return result  # terminal StoppingReason
             # else: an investigation step happened; keep looping
 
-    def resume_after_approval(self) -> StoppingReason | None:
+    def resume_after_approval(self, step_delay: float = 0.0) -> StoppingReason | None:
         """Call after a human has approved/rejected the most recent pending action."""
         pending_action = self._latest_action()
         if pending_action is None or pending_action.approval_status == ApprovalStatus.PENDING.value:
@@ -164,18 +177,20 @@ class AgentLoop:
                 f"continuing investigation without it.",
             )
             self.incident.phase = IncidentPhase.COLLECTING_OBSERVATIONS.value
-            self.session.flush()
-            return self.run_to_completion()
+            self.session.commit()
+            return self.run_to_completion(step_delay=step_delay)
 
         result = self._execute_approved_action(pending_action)
+        self.session.commit()
         if result == VERIFY_FAILED:
             self.incident.phase = IncidentPhase.COLLECTING_OBSERVATIONS.value
-            self.session.flush()
+            self.session.commit()
             budget_hit = check_budgets(self.incident)
             if budget_hit:
                 self._resolve(IncidentPhase.BUDGET_EXHAUSTED, budget_hit)
+                self.session.commit()
                 return budget_hit
-            return self.run_to_completion()
+            return self.run_to_completion(step_delay=step_delay)
         return result
 
     def _latest_action(self) -> m.ActionLog | None:
